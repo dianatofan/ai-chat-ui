@@ -10,16 +10,19 @@ import {
   Bot,
   User,
   Clock,
+  Plus,
 } from "lucide-react"
 import { SuggestionCard } from "@/components/suggestion-card"
 import { ChatInput } from "@/components/chat-input"
 import { GeometricAccent } from "@/components/geometric-accent"
 import { TopBar } from "@/components/top-bar"
+import { PresentationPreview } from "@/components/presentation-preview"
 import { cn } from "@/lib/utils"
 
 interface Message {
   role: "user" | "assistant"
   content: string
+  presentationTitle?: string
 }
 
 function RecentPresentationItem({ title, date }: { title: string; date: string }) {
@@ -88,11 +91,16 @@ export function ChatArea() {
     // Simulate AI response
     setTimeout(() => {
       setIsTyping(false)
+
+      // Extract presentation title from user input
+      const presentationTitle = value.charAt(0).toUpperCase() + value.slice(1)
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: `Great choice! I'll help you create a presentation about "${value}". Let me set up the structure with a clear narrative, key talking points, and professional visuals that align with your brand guidelines. Would you like me to proceed, or would you like to refine any details first?`,
+          content: `Great choice! I'll help you create a presentation about "${value}". Let me set up the structure with a clear narrative, key talking points, and professional visuals that align with your brand guidelines.`,
+          presentationTitle: presentationTitle,
         },
       ])
     }, 2000)
@@ -100,6 +108,11 @@ export function ChatArea() {
 
   const handleSuggestionClick = (title: string) => {
     handleSubmit(`Create a ${title.toLowerCase()} presentation`)
+  }
+
+  const handleNewChat = () => {
+    setMessages([])
+    setIsTyping(false)
   }
 
   const isEmptyState = messages.length === 0
@@ -120,6 +133,7 @@ export function ChatArea() {
             messages={messages}
             isTyping={isTyping}
             onSubmit={handleSubmit}
+            onNewChat={handleNewChat}
           />
         )}
       </div>
@@ -225,10 +239,12 @@ function ConversationView({
   messages,
   isTyping,
   onSubmit,
+  onNewChat,
 }: {
   messages: Message[]
   isTyping: boolean
   onSubmit: (value: string) => void
+  onNewChat: () => void
 }) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -238,38 +254,55 @@ function ConversationView({
 
   return (
     <div className="flex w-full max-w-2xl flex-1 flex-col">
+      {/* New Chat Button */}
+      <div className="flex justify-center pb-4 pt-2">
+        <button
+          onClick={onNewChat}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-sm font-medium text-card-foreground transition-all duration-200 hover:border-primary/20 hover:bg-card/80 hover:shadow-[var(--shadow-light-100)]"
+        >
+          <Plus size={16} strokeWidth={2} opacity={0.7} />
+          <span>New Chat</span>
+        </button>
+      </div>
+
       {/* Messages */}
       <div className="flex flex-1 flex-col gap-6 pb-6 pt-4">
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
-              msg.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
-            {msg.role === "assistant" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
-                <Bot size={16} className="text-primary" strokeWidth={2} />
-              </div>
-            )}
+          <div key={i} className="flex flex-col gap-4">
             <div
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground rounded-br-md"
-                  : "border border-border bg-card text-card-foreground shadow-[var(--shadow-light-100)] rounded-bl-md"
+                "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                msg.role === "user" ? "justify-end" : "justify-start"
               )}
             >
-              {msg.content}
+              {msg.role === "assistant" && (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
+                  <Bot size={16} className="text-primary" strokeWidth={2} />
+                </div>
+              )}
+              <div
+                className={cn(
+                  "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground rounded-br-md"
+                    : "border border-border bg-card text-card-foreground shadow-[var(--shadow-light-100)] rounded-bl-md"
+                )}
+              >
+                {msg.content}
+              </div>
+              {msg.role === "user" && (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                  <User
+                    size={16}
+                    className="text-secondary-foreground"
+                    strokeWidth={2}
+                  />
+                </div>
+              )}
             </div>
-            {msg.role === "user" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                <User
-                  size={16}
-                  className="text-secondary-foreground"
-                  strokeWidth={2}
-                />
+            {msg.role === "assistant" && msg.presentationTitle && (
+              <div className="flex gap-3 pl-10">
+                <PresentationPreview title={msg.presentationTitle} />
               </div>
             )}
           </div>

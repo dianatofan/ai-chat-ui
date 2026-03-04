@@ -71,7 +71,7 @@ export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
             className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
             aria-label="Attach file"
           >
-            <Paperclip size={16} strokeWidth={1.5} />
+            <Paperclip size={16} strokeWidth={1.5} opacity={0.7} />
           </button>
         </div>
 
@@ -86,7 +86,7 @@ export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
           )}
           aria-label="Send message"
         >
-          <ArrowUp size={16} strokeWidth={2.5} />
+          <ArrowUp size={16} strokeWidth={2.5} opacity={0.7} />
         </button>
       </div>
     </div>

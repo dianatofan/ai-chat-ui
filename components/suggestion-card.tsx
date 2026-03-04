@@ -36,6 +36,7 @@ export function SuggestionCard({
           size={20}
           className="text-muted-foreground transition-colors group-hover:text-primary"
           strokeWidth={1.5}
+          opacity={0.7}
         />
       </div>
       <div className="relative z-10 flex flex-col gap-1.5">

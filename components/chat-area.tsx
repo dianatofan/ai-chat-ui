@@ -9,6 +9,7 @@ import {
   Sparkles,
   Bot,
   User,
+  Clock,
 } from "lucide-react"
 import { SuggestionCard } from "@/components/suggestion-card"
 import { ChatInput } from "@/components/chat-input"
@@ -19,6 +20,28 @@ import { cn } from "@/lib/utils"
 interface Message {
   role: "user" | "assistant"
   content: string
+}
+
+function RecentPresentationItem({ title, date }: { title: string; date: string }) {
+  return (
+    <button className="group relative flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-left transition-all duration-200 hover:border-primary/20 hover:bg-card/80 hover:shadow-[var(--shadow-light-100)] overflow-hidden min-w-0">
+      {/* Background gradient on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+
+      <div className="relative z-10 flex items-start justify-between gap-2 min-w-0">
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <span className="text-sm font-medium text-card-foreground truncate">{title}</span>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock size={12} strokeWidth={2} opacity={0.6} />
+            <span>{date}</span>
+          </div>
+        </div>
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary transition-colors group-hover:bg-primary/10">
+          <Presentation size={14} className="text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={1.5} opacity={0.7} />
+        </div>
+      </div>
+    </button>
+  )
 }
 
 const suggestions = [
@@ -111,12 +134,14 @@ function EmptyState({
   onSuggestionClick: (title: string) => void
   onSubmit: (value: string) => void
 }) {
+  const [activeTab, setActiveTab] = useState<"recent" | "templates">("templates")
+
   return (
-    <div className="flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-10">
+    <div className="flex w-full max-w-2xl flex-1 flex-col items-center gap-10 pt-8">
       {/* Hero section */}
       <div className="flex flex-col items-center gap-6 text-center">
         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          <Sparkles size={14} className="text-primary" strokeWidth={2} />
+          <Sparkles size={14} className="text-primary" strokeWidth={2} opacity={0.7} />
           <span>AI-powered creation</span>
         </div>
         <div className="flex flex-col gap-2">
@@ -134,22 +159,63 @@ function EmptyState({
         <ChatInput onSubmit={onSubmit} />
       </div>
 
-      {/* Suggestion cards */}
-      <div className="w-full">
-        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-          Get started in seconds
-        </p>
-        <div className="grid grid-cols-2 gap-4">
-          {suggestions.map((s) => (
-            <SuggestionCard
-              key={s.title}
-              icon={s.icon}
-              title={s.title}
-              description={s.description}
-              onClick={() => onSuggestionClick(s.title)}
-            />
-          ))}
+      {/* Tab toggle buttons */}
+      <div className="w-full flex justify-center">
+        <div className="flex gap-2 p-1 rounded-lg bg-secondary">
+          <button
+            onClick={() => setActiveTab("recent")}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
+              activeTab === "recent"
+                ? "bg-card text-card-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Recent
+          </button>
+          <button
+            onClick={() => setActiveTab("templates")}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
+              activeTab === "templates"
+                ? "bg-card text-card-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Templates
+          </button>
         </div>
+      </div>
+
+      {/* Content Container - Fixed height to prevent position shifting */}
+      <div className="w-full h-[340px]">
+        {/* Recent Presentations */}
+        {activeTab === "recent" && (
+          <div className="w-full h-full animate-in fade-in zoom-in-95 duration-300">
+            <div className="grid grid-cols-3 gap-3">
+              <RecentPresentationItem title="Q1 Financial Review" date="2 days ago" />
+              <RecentPresentationItem title="Product Roadmap 2026" date="1 week ago" />
+              <RecentPresentationItem title="Team Onboarding Guide" date="2 weeks ago" />
+            </div>
+          </div>
+        )}
+
+        {/* Templates */}
+        {activeTab === "templates" && (
+          <div className="w-full h-full animate-in fade-in zoom-in-95 duration-300">
+            <div className="grid grid-cols-2 gap-4">
+              {suggestions.map((s) => (
+                <SuggestionCard
+                  key={s.title}
+                  icon={s.icon}
+                  title={s.title}
+                  description={s.description}
+                  onClick={() => onSuggestionClick(s.title)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

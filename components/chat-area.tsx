@@ -6,16 +6,16 @@ import {
   BarChart3,
   Target,
   Lightbulb,
-  Sparkles,
   Bot,
   User,
   Clock,
   Plus,
+  Download,
+  Check,
 } from "lucide-react"
 import { SuggestionCard } from "@/components/suggestion-card"
 import { ChatInput } from "@/components/chat-input"
 import { GeometricAccent } from "@/components/geometric-accent"
-import { TopBar } from "@/components/top-bar"
 import { PresentationPreview } from "@/components/presentation-preview"
 import { cn } from "@/lib/utils"
 
@@ -23,6 +23,94 @@ interface Message {
   role: "user" | "assistant"
   content: string
   presentationTitle?: string
+}
+
+type GenerationStatus = "idle" | "generating" | "done"
+
+const GENERATION_STEPS = [
+  { id: "analyze", label: "Analyzing your request" },
+  { id: "outline", label: "Building presentation outline" },
+  { id: "slides", label: "Generating slides" },
+  { id: "finalize", label: "Finalizing content" },
+]
+
+function GenerationLoader({ currentStep }: { currentStep: number }) {
+  return (
+    <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
+        <img
+          src="/logo-blue.png"
+          alt="Loading"
+          className="h-4 w-4 animate-spin"
+        />
+      </div>
+      <div className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3.5 shadow-[var(--shadow-light-100)]">
+        <div className="mb-3 text-sm font-medium text-card-foreground">
+          Generating presentation
+        </div>
+        <div className="space-y-2">
+          {GENERATION_STEPS.map((step, idx) => {
+            const isComplete = idx < currentStep
+            const isActive = idx === currentStep
+
+            return (
+              <div
+                key={step.id}
+                className={cn(
+                  "flex items-center gap-2 text-xs rounded-md px-2 py-1.5 transition-all",
+                  isComplete
+                    ? "text-emerald-700 bg-emerald-50"
+                    : isActive
+                    ? "text-primary bg-primary/5"
+                    : "text-muted-foreground"
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex h-4 w-4 items-center justify-center rounded-full border text-[10px] font-medium",
+                    isComplete
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : isActive
+                      ? "border-primary text-primary"
+                      : "border-border text-muted-foreground"
+                  )}
+                >
+                  {isComplete ? <Check size={10} strokeWidth={3} /> : ""}
+                </div>
+                <span className="font-medium">{step.label}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GenerationDone({ onDownload }: { onDownload: () => void }) {
+  return (
+    <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
+        <img
+          src="/logo-blue.png"
+          alt="Done"
+          className="h-4 w-4"
+        />
+      </div>
+      <div className="rounded-2xl rounded-bl-md border border-border bg-white px-4 py-3.5 shadow-[var(--shadow-light-100)]">
+        <div className="mb-3 text-sm font-medium text-muted-foreground">
+          Presentation done!
+        </div>
+        <button
+          onClick={onDownload}
+          className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95"
+        >
+          <Download size={14} />
+          <span>Download</span>
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function RecentPresentationItem({ title, date }: { title: string; date: string }) {
@@ -83,27 +171,43 @@ function TypingIndicator() {
 export function ChatArea() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
+  const [generationStatus, setGenerationStatus] = useState<GenerationStatus>("idle")
+  const [generationStep, setGenerationStep] = useState(0)
 
   const handleSubmit = (value: string) => {
     setMessages((prev) => [...prev, { role: "user", content: value }])
-    setIsTyping(true)
 
-    // Simulate AI response
+    // Add AI response immediately
+    const presentationTitle = value.charAt(0).toUpperCase() + value.slice(1)
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: `Great choice! I'll help you create a presentation about "${value}". Let me set up the structure with a clear narrative, key talking points, and professional visuals that align with your brand guidelines.`,
+        presentationTitle: presentationTitle,
+      },
+    ])
+
+    // Then start generation loading after a brief delay
     setTimeout(() => {
-      setIsTyping(false)
+      setIsTyping(true)
+      setGenerationStatus("generating")
+      setGenerationStep(0)
 
-      // Extract presentation title from user input
-      const presentationTitle = value.charAt(0).toUpperCase() + value.slice(1)
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Great choice! I'll help you create a presentation about "${value}". Let me set up the structure with a clear narrative, key talking points, and professional visuals that align with your brand guidelines.`,
-          presentationTitle: presentationTitle,
-        },
-      ])
-    }, 2000)
+      // Simulate step progression
+      let step = 0
+      const stepInterval = setInterval(() => {
+        step += 1
+        setGenerationStep(step)
+        if (step >= GENERATION_STEPS.length) {
+          clearInterval(stepInterval)
+          setTimeout(() => {
+            setIsTyping(false)
+            setGenerationStatus("done")
+          }, 500)
+        }
+      }, 800)
+    }, 600)
   }
 
   const handleSuggestionClick = (title: string) => {
@@ -113,13 +217,19 @@ export function ChatArea() {
   const handleNewChat = () => {
     setMessages([])
     setIsTyping(false)
+    setGenerationStatus("idle")
+    setGenerationStep(0)
+  }
+
+  const handleDownload = () => {
+    console.log("Downloading presentation...")
+    // Add actual download logic here
   }
 
   const isEmptyState = messages.length === 0
 
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden bg-background">
-      <TopBar />
       <GeometricAccent />
 
       <div className="relative flex flex-1 flex-col items-center overflow-y-auto px-6 py-8">
@@ -132,8 +242,11 @@ export function ChatArea() {
           <ConversationView
             messages={messages}
             isTyping={isTyping}
+            generationStatus={generationStatus}
+            generationStep={generationStep}
             onSubmit={handleSubmit}
             onNewChat={handleNewChat}
+            onDownload={handleDownload}
           />
         )}
       </div>
@@ -154,10 +267,6 @@ function EmptyState({
     <div className="flex w-full max-w-2xl flex-1 flex-col items-center gap-10 pt-8">
       {/* Hero section */}
       <div className="flex flex-col items-center gap-6 text-center">
-        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          <Sparkles size={14} className="text-primary" strokeWidth={2} opacity={0.7} />
-          <span>AI-powered creation</span>
-        </div>
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-3xl font-medium leading-tight tracking-tight text-balance">
             What are we <span className="text-primary">creating</span> today?
@@ -238,19 +347,25 @@ function EmptyState({
 function ConversationView({
   messages,
   isTyping,
+  generationStatus,
+  generationStep,
   onSubmit,
   onNewChat,
+  onDownload,
 }: {
   messages: Message[]
   isTyping: boolean
+  generationStatus: GenerationStatus
+  generationStep: number
   onSubmit: (value: string) => void
   onNewChat: () => void
+  onDownload: () => void
 }) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isTyping])
+  }, [messages, isTyping, generationStatus])
 
   return (
     <div className="flex w-full max-w-2xl flex-1 flex-col">
@@ -300,23 +415,17 @@ function ConversationView({
                 </div>
               )}
             </div>
-            {msg.role === "assistant" && msg.presentationTitle && (
-              <div className="flex gap-3 pl-10">
-                <PresentationPreview title={msg.presentationTitle} />
-              </div>
-            )}
           </div>
         ))}
-        {isTyping && (
-          <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
-              <Bot size={16} className="text-primary" strokeWidth={2} />
-            </div>
-            <div className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3.5 shadow-[var(--shadow-light-100)]">
-              <TypingIndicator />
-            </div>
-          </div>
+
+        {generationStatus === "generating" && (
+          <GenerationLoader currentStep={generationStep} />
         )}
+
+        {generationStatus === "done" && (
+          <GenerationDone onDownload={onDownload} />
+        )}
+
         <div ref={bottomRef} />
       </div>
 

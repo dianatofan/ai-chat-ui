@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { ArrowUp, Paperclip, Sparkles, Mic, MicOff, X, Link as LinkIcon, Image, FileText } from "lucide-react"
+import { ArrowUp, Paperclip, X, Link as LinkIcon, Image, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface InspirationFile {
@@ -18,88 +18,15 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
+  const MAX_PROMPT_CHARS = 4000
   const [value, setValue] = useState("")
   const [isFocused, setIsFocused] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
-  const [isListening, setIsListening] = useState(false)
   const [inspirationFiles, setInspirationFiles] = useState<InspirationFile[]>([])
   const [showInspirationMenu, setShowInspirationMenu] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const recognitionRef = useRef<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // Initialize speech recognition
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition()
-        recognitionRef.current.continuous = true
-        recognitionRef.current.interimResults = true
-        recognitionRef.current.lang = 'en-US'
-
-        recognitionRef.current.onstart = () => {
-          setIsListening(true)
-        }
-
-        recognitionRef.current.onresult = (event: any) => {
-          let interimTranscript = ''
-          let finalTranscript = ''
-
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript + ' '
-            } else {
-              interimTranscript += transcript
-            }
-          }
-
-          if (finalTranscript) {
-            setValue((prev) => prev + finalTranscript)
-          }
-        }
-
-        recognitionRef.current.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error)
-          setIsRecording(false)
-          setIsListening(false)
-        }
-
-        recognitionRef.current.onend = () => {
-          setIsListening(false)
-          if (isRecording) {
-            // Restart if still recording
-            recognitionRef.current?.start()
-          }
-        }
-      }
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
-      }
-    }
-  }, [isRecording])
-
-  const toggleVoiceInput = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.')
-      return
-    }
-
-    if (isRecording) {
-      recognitionRef.current.stop()
-      setIsRecording(false)
-      setIsListening(false)
-    } else {
-      setIsRecording(true)
-      recognitionRef.current.start()
-    }
-  }
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -109,7 +36,7 @@ export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
   }, [value])
 
   const handleSubmit = () => {
-    if (value.trim() && !disabled) {
+    if (value.trim() && value.length <= MAX_PROMPT_CHARS && !disabled) {
       onSubmit(value.trim())
       setValue("")
       setInspirationFiles([])
@@ -179,6 +106,13 @@ export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
     }
   }
 
+  const handleChipClick = (chipText: string) => {
+    const currentValue = value.trim()
+    const newValue = currentValue ? `${currentValue} ${chipText}` : chipText
+    setValue(newValue)
+    textareaRef.current?.focus()
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div
@@ -229,33 +163,22 @@ export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
         )}
 
         <div className="flex items-start gap-3 p-4">
-        <Sparkles
-          size={18}
-          className="mt-0.5 shrink-0 text-primary opacity-60"
-          strokeWidth={2}
-        />
-        <div className="flex-1 relative">
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onKeyDown={handleKeyDown}
-            placeholder={isListening ? "Listening..." : "Q3 sales pitch, team update, product roadmap..."}
-            disabled={disabled}
-            rows={1}
-            className="min-h-[24px] w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-            aria-label="Describe your presentation"
-          />
-          {isListening && (
-            <div className="absolute -right-2 top-0 flex items-center gap-1">
-              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
-              <span className="text-xs text-primary font-medium">Recording</span>
-            </div>
-          )}
+          <div className="flex-1 relative">
+            <textarea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onKeyDown={handleKeyDown}
+              placeholder="Q3 sales pitch, team update, product roadmap..."
+              disabled={disabled}
+              rows={1}
+              className="min-h-[24px] w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              aria-label="Describe your presentation"
+            />
+          </div>
         </div>
-      </div>
 
       <div className="flex items-center justify-between border-t border-border/50 px-4 py-2.5">
         <div className="flex items-center gap-1">
@@ -306,46 +229,33 @@ export function ChatInput({ onSubmit, disabled }: ChatInputProps) {
               className="hidden"
             />
           </div>
-
-          <button
-            onClick={toggleVoiceInput}
-            className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200",
-              isRecording
-                ? "bg-primary/10 text-primary animate-pulse"
-                : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-            )}
-            aria-label={isRecording ? "Stop recording" : "Start voice input"}
-            disabled={disabled}
-          >
-            {isRecording ? (
-              <MicOff size={16} strokeWidth={1.5} opacity={0.9} />
-            ) : (
-              <Mic size={16} strokeWidth={1.5} opacity={0.7} />
-            )}
-          </button>
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={!value.trim() || disabled}
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200",
-            value.trim()
-              ? "bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-95"
-              : "bg-secondary text-muted-foreground"
-          )}
-          aria-label="Send message"
-        >
-          <ArrowUp size={16} strokeWidth={2.5} opacity={0.7} />
-        </button>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "text-xs tabular-nums",
+              value.length > MAX_PROMPT_CHARS ? "text-destructive" : "text-muted-foreground"
+            )}
+          >
+            {value.length} / {MAX_PROMPT_CHARS}
+          </span>
+          <button
+            onClick={handleSubmit}
+            disabled={!value.trim() || value.length > MAX_PROMPT_CHARS || disabled}
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200",
+              value.trim() && value.length <= MAX_PROMPT_CHARS
+                ? "bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-95"
+                : "bg-secondary text-muted-foreground"
+            )}
+            aria-label="Send message"
+          >
+            <ArrowUp size={16} strokeWidth={2.5} opacity={0.7} />
+          </button>
+        </div>
       </div>
       </div>
-
-      {/* Helper text */}
-      <p className="text-xs text-muted-foreground">
-        {isDragging ? "Drop files here..." : "Attach slides, screenshots, or links to guide the AI"}
-      </p>
     </div>
   )
 }

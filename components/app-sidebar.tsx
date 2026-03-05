@@ -10,8 +10,8 @@ import {
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { icon: Sparkles, label: "Create", active: true },
-  { icon: LayoutGrid, label: "Browse", active: false },
+  { icon: Sparkles, label: "Templates", active: true },
+  { icon: LayoutGrid, label: "Recents", active: false },
 ]
 
 export function AppSidebar() {

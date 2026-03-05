@@ -92,7 +92,7 @@ function GenerationDone({ onDownload }: { onDownload: () => void }) {
     <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
         <img
-          src="/ai-chat-ui/logo-blue.png"
+            src="/ai-chat-ui/logo-blue.png"
           alt="Done"
           className="h-4 w-4"
         />
@@ -286,17 +286,6 @@ function EmptyState({
       <div className="w-full flex justify-center">
         <div className="flex gap-2 p-1 rounded-lg bg-secondary">
           <button
-            onClick={() => setActiveTab("recent")}
-            className={cn(
-              "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
-              activeTab === "recent"
-                ? "bg-card text-card-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Recent
-          </button>
-          <button
             onClick={() => setActiveTab("templates")}
             className={cn(
               "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
@@ -306,6 +295,17 @@ function EmptyState({
             )}
           >
             Templates
+          </button>
+          <button
+            onClick={() => setActiveTab("recent")}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
+              activeTab === "recent"
+                ? "bg-card text-card-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Recents
           </button>
         </div>
       </div>

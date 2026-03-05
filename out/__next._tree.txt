@@ -1,0 +1,5 @@
+:HL["/ai-chat-ui/_next/static/chunks/b966e2255510ec27.css","style"]
+:HL["/ai-chat-ui/_next/static/chunks/7944b0514de38f71.css","style"]
+:HL["/ai-chat-ui/_next/static/media/cf514f5d0007dafa-s.p.417aa1a2.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap","style"]
+0:{"buildId":"GHlBN-cvgmAUUsT55yYWi","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

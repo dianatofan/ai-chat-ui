@@ -6,6 +6,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+    output: "export",
+    basePath: "/ai-chat-ui",
+    assetPrefix: "/ai-chat-ui/",
 }
 
 export default nextConfig

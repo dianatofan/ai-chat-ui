@@ -22,7 +22,7 @@ export function AppSidebar() {
         <div className="flex items-center">
           {/* Templafy Logo */}
           <Image
-            src="/Logo.png"
+            src="/ai-chat-ui/Logo.png"
             alt="Templafy Logo"
             width={94}
             height={94}

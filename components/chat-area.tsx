@@ -39,7 +39,7 @@ function GenerationLoader({ currentStep }: { currentStep: number }) {
     <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
         <img
-          src="/logo-blue.png"
+          src="/ai-chat-ui/logo-blue.png"
           alt="Loading"
           className="h-4 w-4 animate-spin"
         />
@@ -92,7 +92,7 @@ function GenerationDone({ onDownload }: { onDownload: () => void }) {
     <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] ring-1 ring-primary/10">
         <img
-          src="/logo-blue.png"
+          src="/ai-chat-ui/logo-blue.png"
           alt="Done"
           className="h-4 w-4"
         />
